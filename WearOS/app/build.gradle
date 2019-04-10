@@ -18,6 +18,7 @@ android {
 }
 
 dependencies {
+    implementation 'com.github.lzyzsd:circleprogress:1.2.1'
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation 'com.google.android.support:wearable:2.4.0'
     implementation 'com.google.android.gms:play-services-wearable:16.0.1'
