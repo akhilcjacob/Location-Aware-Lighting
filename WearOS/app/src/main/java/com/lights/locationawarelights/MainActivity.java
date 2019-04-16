@@ -2,6 +2,8 @@ package com.lights.locationawarelights;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothHeadset;
+import android.bluetooth.BluetoothProfile;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -18,23 +20,23 @@ public class MainActivity extends WearableActivity {
     public static int BRIGHTNESS = 50;
 
     private ArcProgress arc;
-    // Create a BroadcastReceiver for ACTION_FOUND.
-    private final BroadcastReceiver receiver = new BroadcastReceiver() {
-        public void onReceive(Context context, Intent intent) {
-            System.out.println("Recieved something");
-            String action = intent.getAction();
-            if (BluetoothDevice.ACTION_FOUND.equals(action)) {
-                // Discovery has found a device. Get the BluetoothDevice
-                // object and its info from the Intent.
-                BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-                String deviceName = device.getName();
-                String deviceHardwareAddress = device.getAddress(); // MAC address
-                System.out.println(deviceName);
-                System.out.println(deviceHardwareAddress);
-                System.out.println();
+
+    BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+    BluetoothHeadset bluetoothHeadset;
+
+    private BluetoothProfile.ServiceListener profileListener = new BluetoothProfile.ServiceListener() {
+        public void onServiceConnected(int profile, BluetoothProfile proxy) {
+            if (profile == BluetoothProfile.HEADSET) {
+                bluetoothHeadset = (BluetoothHeadset) proxy;
+            }
+        }
+        public void onServiceDisconnected(int profile) {
+            if (profile == BluetoothProfile.HEADSET) {
+                bluetoothHeadset = null;
             }
         }
     };
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,11 +46,13 @@ public class MainActivity extends WearableActivity {
         setAmbientEnabled();
         IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
 
-        registerReceiver(receiver, filter);
 
-        Intent discoverableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
-        discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 300);
-        startActivity(discoverableIntent);
+        if (!bluetoothAdapter.isEnabled()) {
+            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            startActivityForResult(enableBtIntent, 1);
+        }
+
+
 
 
     }
@@ -101,7 +105,6 @@ public class MainActivity extends WearableActivity {
     }
     protected void onDestroy() {
         super.onDestroy();
-        unregisterReceiver(receiver);
     }
 
 }

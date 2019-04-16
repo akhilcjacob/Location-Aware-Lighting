@@ -9,107 +9,168 @@
     tools:context=".MainActivity"
     tools:deviceIds="wear">
 
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:foregroundGravity="center"
+        android:scrollbars="none">
+
+        <TableLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:foregroundGravity="center">
+
+            <TableRow
+                android:layout_width="match_parent"
+                android:layout_height="187dp"
+                android:foregroundGravity="center"
+                android:gravity="center">
+
+
+                <android.support.constraint.ConstraintLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
+
+                    <Button
+                        android:id="@+id/button"
+                        style="?android:attr/borderlessButtonStyle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="48dp"
+                        android:layout_marginStart="8dp"
+                        android:layout_marginTop="36dp"
+                        android:layout_marginEnd="8dp"
+                        android:backgroundTint="@color/dark_grey"
+                        android:onClick="brightness_up"
+                        android:shadowColor="@color/dark_grey"
+                        android:text="+"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintHorizontal_bias="0.504"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        tools:background="@color/dark_grey" />
+
+                    <LinearLayout
+                        android:id="@+id/linearLayout"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="16dp"
+                        android:layout_marginTop="8dp"
+                        android:layout_marginEnd="16dp"
+                        android:gravity="center"
+                        android:orientation="vertical"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent">
+
+                        <com.github.lzyzsd.circleprogress.ArcProgress
+                            android:id="@+id/arc"
+                            android:layout_width="199dp"
+                            android:layout_height="184dp"
+                            android:layout_marginStart="8dp"
+                            android:layout_marginTop="8dp"
+                            android:layout_marginEnd="8dp"
+                            android:layout_marginBottom="8dp"
+                            app:arc_bottom_text="Brightness"
+                            app:arc_bottom_text_size="15sp"
+                            app:arc_progress="30"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintHorizontal_bias="0.493"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="parent"
+                            app:layout_constraintVertical_bias="0.498" />
+                        <!--<TextView-->
+                        <!--android:id="@+id/textb"-->
+                        <!--android:layout_width="match_parent"-->
+                        <!--android:layout_height="match_parent"-->
+                        <!--android:layout_marginEnd="8dp"-->
+                        <!--android:text="Brightness"-->
+                        <!--android:textAlignment="center"-->
+                        <!--android:textAppearance="@android:style/TextAppearance.Material.Large"-->
+                        <!--android:textSize="30sp"-->
+                        <!--app:layout_constraintEnd_toEndOf="parent"-->
+                        <!--app:layout_constraintStart_toStartOf="parent"-->
+                        <!--tools:layout_editor_absoluteY="24dp" />-->
+
+                        <!--<TextView-->
+                        <!--android:id="@+id/text"-->
+                        <!--android:layout_width="match_parent"-->
+                        <!--android:layout_height="match_parent"-->
+                        <!--android:layout_marginStart="8dp"-->
+                        <!--android:layout_marginEnd="8dp"-->
+                        <!--android:text="level"-->
+                        <!--android:textAlignment="center"-->
+                        <!--android:textAppearance="@android:style/TextAppearance.Material.Medium"-->
+                        <!--android:textSize="24sp"-->
+                        <!--app:layout_constraintEnd_toEndOf="parent"-->
+                        <!--app:layout_constraintStart_toStartOf="parent"-->
+                        <!--app:layout_constraintTop_toBottomOf="@+id/textb" />-->
+                    </LinearLayout>
+
+                    <Button
+                        android:id="@+id/button2"
+                        style="?android:attr/borderlessButtonStyle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="48dp"
+                        android:layout_marginStart="8dp"
+                        android:layout_marginTop="124dp"
+                        android:layout_marginEnd="8dp"
+                        android:backgroundTint="@color/dark_grey"
+                        android:onClick="brightness_down"
+                        android:shadowColor="@color/dark_grey"
+                        android:text="-"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintHorizontal_bias="0.495"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        tools:background="@color/dark_grey" />
+                </android.support.constraint.ConstraintLayout>
+
+            </TableRow>
+
+            <TableRow
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:baselineAligned="false">
+
+                <Button
+                    android:id="@+id/button3"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Button" />
+
+                <TextView
+                    android:id="@+id/textView2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="TextView"
+                    tools:text="This is some @string/common_google_play_services_enable_text" />
+            </TableRow>
+
+            <TableRow
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+
+            <TableRow
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+        </TableLayout>
+    </ScrollView>
+
+
+
     <android.support.constraint.ConstraintLayout
         android:id="@+id/tableRow"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
 
-        <LinearLayout
-            android:id="@+id/linearLayout"
-            android:layout_width="213dp"
-            android:layout_height="200dp"
-            android:layout_marginStart="8dp"
-            android:layout_marginTop="8dp"
-            android:layout_marginEnd="8dp"
-            android:layout_marginBottom="8dp"
-            android:gravity="center_horizontal"
-            android:orientation="vertical"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
 
-            <com.github.lzyzsd.circleprogress.ArcProgress
-                android:id="@+id/arc"
-                android:layout_width="199dp"
-                android:layout_height="184dp"
-                android:layout_marginStart="8dp"
-                android:layout_marginTop="8dp"
-                android:layout_marginEnd="8dp"
-                android:layout_marginBottom="8dp"
-                app:arc_bottom_text="Brightness"
-                app:arc_progress="30"
-                app:arc_bottom_text_size="15sp"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintHorizontal_bias="0.493"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintVertical_bias="0.498" />
-            <!--<TextView-->
-            <!--android:id="@+id/textb"-->
-            <!--android:layout_width="match_parent"-->
-            <!--android:layout_height="match_parent"-->
-            <!--android:layout_marginEnd="8dp"-->
-            <!--android:text="Brightness"-->
-            <!--android:textAlignment="center"-->
-            <!--android:textAppearance="@android:style/TextAppearance.Material.Large"-->
-            <!--android:textSize="30sp"-->
-            <!--app:layout_constraintEnd_toEndOf="parent"-->
-            <!--app:layout_constraintStart_toStartOf="parent"-->
-            <!--tools:layout_editor_absoluteY="24dp" />-->
-
-            <!--<TextView-->
-            <!--android:id="@+id/text"-->
-            <!--android:layout_width="match_parent"-->
-            <!--android:layout_height="match_parent"-->
-            <!--android:layout_marginStart="8dp"-->
-            <!--android:layout_marginEnd="8dp"-->
-            <!--android:text="level"-->
-            <!--android:textAlignment="center"-->
-            <!--android:textAppearance="@android:style/TextAppearance.Material.Medium"-->
-            <!--android:textSize="24sp"-->
-            <!--app:layout_constraintEnd_toEndOf="parent"-->
-            <!--app:layout_constraintStart_toStartOf="parent"-->
-            <!--app:layout_constraintTop_toBottomOf="@+id/textb" />-->
-        </LinearLayout>
-
-        <Button
-            android:id="@+id/button"
-            style="?android:attr/borderlessButtonStyle"
-            android:layout_width="wrap_content"
-            android:layout_height="48dp"
-            android:layout_marginStart="8dp"
-            android:layout_marginTop="36dp"
-            android:layout_marginEnd="8dp"
-            android:backgroundTint="@color/dark_grey"
-            android:shadowColor="@color/dark_grey"
-            android:text="+"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.504"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            android:onClick="brightness_up"
-            tools:background="@color/dark_grey" />
-
-        <Button
-            android:id="@+id/button2"
-            style="?android:attr/borderlessButtonStyle"
-            android:layout_width="wrap_content"
-            android:layout_height="48dp"
-            android:layout_marginStart="8dp"
-            android:layout_marginTop="124dp"
-            android:onClick="brightness_down"
-            android:layout_marginEnd="8dp"
-            android:backgroundTint="@color/dark_grey"
-            android:shadowColor="@color/dark_grey"
-            android:text="-"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.495"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:background="@color/dark_grey" />
+        </RelativeLayout>
 
     </android.support.constraint.ConstraintLayout>
 
