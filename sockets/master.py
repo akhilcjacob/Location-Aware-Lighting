@@ -167,7 +167,7 @@ def main():
 	while (True):
 		time.sleep(5)
 		for client in clients:
-			client.sendall(b'Here is some shit\n')
+			client.sendall(b'Here is some data for you!\n')
 
 		watchData = receiveSignals()
 		signals = parseSignals( watchData )
