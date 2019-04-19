@@ -1,9 +1,19 @@
 package com.lights.locationawarelights;
 
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothHeadset;
+import android.bluetooth.BluetoothProfile;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
+import android.support.v4.view.ViewPager;
 import android.support.wearable.activity.WearableActivity;
 import android.view.KeyEvent;
 import android.view.View;
+import android.widget.Toast;
 
 import com.github.lzyzsd.circleprogress.ArcProgress;
 
@@ -12,13 +22,55 @@ public class MainActivity extends WearableActivity {
     public static int BRIGHTNESS = 50;
 
     private ArcProgress arc;
+    private final BroadcastReceiver receiver = new BroadcastReceiver(){
+        @Override
+        public void onReceive(Context context, Intent intent) {
+
+            String action = intent.getAction();
+            if(BluetoothDevice.ACTION_FOUND.equals(action)) {
+                int  rssi = intent.getShortExtra(BluetoothDevice.EXTRA_RSSI,Short.MIN_VALUE);
+                Toast.makeText(getApplicationContext(),"  RSSI: " + rssi + "dBm", Toast.LENGTH_SHORT).show();
+            }
+        }
+    };
+
+//    BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+//    BluetoothHeadset bluetoothHeadset;
+//
+//    private BluetoothProfile.ServiceListener profileListener = new BluetoothProfile.ServiceListener() {
+//        public void onServiceConnected(int profile, BluetoothProfile proxy) {
+//            if (profile == BluetoothProfile.HEADSET) {
+//                bluetoothHeadset = (BluetoothHeadset) proxy;
+//            }
+//        }
+//        public void onServiceDisconnected(int profile) {
+//            if (profile == BluetoothProfile.HEADSET) {
+//                bluetoothHeadset = null;
+//            }
+//        }
+//    };
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         arc = findViewById(R.id.arc);
-        setAmbientEnabled();
+
+        ViewPager viewPager = (ViewPager) findViewById(R.id.viewpager);
+        viewPager.setAdapter(new CustomPagerAdapter(this));
+//        setAmbientEnabled();
+//        IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
+//
+//
+//        if (!bluetoothAdapter.isEnabled()) {
+//            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+//            startActivityForResult(enableBtIntent, 1);
+//        }
+//
+
+
+
     }
 
     @Override /* KeyEvent.Callback */
@@ -67,6 +119,10 @@ public class MainActivity extends WearableActivity {
     public void brightness_down(View view) {
         brightness_down();
     }
+    protected void onDestroy() {
+        super.onDestroy();
+    }
+
 }
 
 
