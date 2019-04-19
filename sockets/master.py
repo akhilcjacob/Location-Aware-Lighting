@@ -3,6 +3,7 @@ import socket
 import sys
 import os
 import time
+import json
 
 PORT = 5210
 
@@ -39,6 +40,11 @@ def bindClients( server ):
     print("Connected to {:}".format(addr))
     clients.append( conn )
 
+def parseSignals( data ):
+	load = json.read( data )
+
+	
+
 if __name__ == "__main__":
 	HOST = getIP()
 	
@@ -57,6 +63,7 @@ if __name__ == "__main__":
 		time.sleep(5)
 		for client in clients:
 			client.sendall(b'Here is some shit\n')
-		#receiveSignals()
-		#parseSignals()
+
+		watchData = receiveSignals()
+		signals = parseSignals( watchData )
 		#distributeBrightness()
