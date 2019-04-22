@@ -1,11 +1,15 @@
 # master.py
 import socket
-import sys
 import os
 import time
 import json
 import queue
 import SignalQueue
+
+import sys
+sys.path.insert(0, '../Lights')
+
+from led import Lights
 
 PORT = 5210
 
@@ -20,6 +24,9 @@ signals = {
 	"pi2": SignalQueue.SignalQueue(QUEUE_SIZE, MAX_SIG_VARIANCE),
 	"pi3": SignalQueue.SignalQueue(QUEUE_SIZE, MAX_SIG_VARIANCE)
 } 
+
+#The light that the master pi controls
+light = Lights()
 
 '''
 Gets the IP from the command line by parsing out ifconfig data.
@@ -68,7 +75,8 @@ def bindClients( server ):
 			raise
 		else:
 			print("Connected to {:}".format(addr))
-			clients.append( conn )
+			name = server.recv(1024)
+			clients.append( (conn, name) )
 			return
 
 '''
@@ -123,6 +131,7 @@ Args:
 def parseSignals( data ):
 	load = json.loads( data )
 	color = load["color"]
+	brightness = load["brightness"]
 
 	newSignal = {}
 	for pi in [1,2,3]:
@@ -144,7 +153,14 @@ def parseSignals( data ):
 			newSignal[most_recent] = currentPi
 
 	ranks = getSignalRanking(newSignal)
-	return ranks
+	return color, brightness, ranks
+
+def distributeBrightness( signalOrder, color, brightness ):
+	for client in clients:
+		divisor = 1
+		if (signalOrder[1] == client[1]): divisor = 2
+		if (signalOrder[2] == client[1]): divisor = brightness
+		client[0].sendall(b'{:}|{:}'.format(color, brightness/divisor))
 
 '''
 Runs the code to set up and process signal data
@@ -165,13 +181,21 @@ def main():
 
 	# Infinite Loop
 	while (True):
-		time.sleep(5)
-		for client in clients:
-			client.sendall(b'Here is some data for you!\n')
-
 		watchData = receiveSignals()
-		signals = parseSignals( watchData )
-		#distributeBrightness()
+		color, brightness, signals = parseSignals( watchData )
+
+		#Changing lighting and telling the clients to do as well
+		divisor = 1
+		if ( signals[1] == "rp1"): divisor = 2
+		if ( signals[2] == "rp1"): divisor = brightness
+
+		light.setColor( color )
+		light.setBrightness( brightness/divisor )
+
+		distributeBrightness( signals, color, brightness )
+
+		#Run again in 1/5th of a second
+		time.sleep(.2)
 
 # RUNNING MAIN
 main()

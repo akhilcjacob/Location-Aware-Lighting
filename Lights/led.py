@@ -87,8 +87,10 @@ class Lights(object):
         #pi.set_PWM_dutycycle(self.redPin, r)
         #pi.set_PWM_dutycycle(self.greenPin, g)
         #pi.set_PWM_dutycycle(self.bluePin, b)
-l = Lights()
-while True:
-    l.setColor('#0000ff')
-    time.sleep(2)
-    l.setColor('#ff0000')
+
+if __name__ == "__main__":
+    l = Lights()
+    while True:
+        l.setColor('#0000ff')
+        time.sleep(2)
+        l.setColor('#ff0000')
