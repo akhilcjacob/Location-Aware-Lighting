@@ -8,31 +8,28 @@ import android.bluetooth.le.ScanFilter;
 import android.bluetooth.le.ScanResult;
 import android.bluetooth.le.ScanSettings;
 import android.content.Context;
-import android.net.ConnectivityManager;
-import android.net.Network;
-import android.net.NetworkCapabilities;
-import android.net.NetworkRequest;
 import android.os.Bundle;
 import android.support.v4.view.ViewPager;
 import android.support.wearable.activity.WearableActivity;
 import android.view.KeyEvent;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.TextView;
 
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
 import com.github.lzyzsd.circleprogress.ArcProgress;
 
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.PrintWriter;
-import java.net.Inet4Address;
-import java.net.InetAddress;
-import java.net.Socket;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-public class MainActivity extends WearableActivity {
+public class MainActivity extends WearableActivity{
     public static int BRIGHTNESS = 50;
 
     private ArcProgress arc;
@@ -46,6 +43,7 @@ public class MainActivity extends WearableActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         // Launch the bluetooth service
         BluetoothManager bluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
@@ -78,14 +76,20 @@ public class MainActivity extends WearableActivity {
 
 
         // Testing in the union: some random mac id
-        scan_results.put("10:A5:6B:41:D9:55", 0);
-        update_result.put("10:A5:6B:41:D9:55", 0);
-        human_read.put("10:A5:6B:41:D9:55", "Rando");
+//        scan_results.put("10:A5:6B:41:D9:55", 0);
+//        update_result.put("10:A5:6B:41:D9:55", 0);
+//        human_read.put("10:A5:6B:41:D9:55", "Rando");
 
 
 
         // Defines the arc that ring that shows brightness
         arc = findViewById(R.id.arc);
+
+        System.out.println("Running the setup");
+        for(int x =0; x<1;x++)
+        setupNetwork();
+        System.out.println("Done the setup");
+
 
         // The callback that runs for each discovered mac address
         ScanCallback mScanCallback = new ScanCallback() {
@@ -96,7 +100,6 @@ public class MainActivity extends WearableActivity {
                 // The MAC id of the newest scan device
                 String mac_id = result.getDevice().toString();
                 System.out.println(mac_id);
-
 
                 // Check if this is a mac ID we want to store information on
                 if (human_read.containsKey(mac_id)) {
@@ -129,6 +132,40 @@ public class MainActivity extends WearableActivity {
         };
         // Start the bluetooth scanner
         mLEScanner.startScan(filters, settings, mScanCallback);
+
+    }
+    public Map<String, String> getHeaders()
+    {
+        Map<String, String> headers = new HashMap<String, String>();
+        headers.put("Content-Type", "application/json");
+        return headers;
+    }
+    private void setupNetwork(){
+        RequestQueue queue = Volley.newRequestQueue(this);
+//        String url ="http://www.google.com";
+        String url ="https://ws-api.iextrading.com/1.0/stock/aapl/delayed-quote";
+
+// Request a string response from the provided URL.
+        StringRequest stringRequest = new StringRequest(Request.Method.PUT, url,
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        // Display the first 500 characters of the response string.
+                        System.out.println("Response is: ");
+                        System.out.println(response.toString());
+                    }
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                System.out.println("That didn't work!");
+                System.out.println(error.toString());
+            }
+        });
+
+// Add the request to the RequestQueue.
+        queue.add(stringRequest);
+
+
 
     }
 
