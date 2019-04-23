@@ -48,3 +48,4 @@ if __name__ == "__main__":
         light.setBrightness( brightness )
 
     print("Master Pi is down. Stopping...")
+    quit()
