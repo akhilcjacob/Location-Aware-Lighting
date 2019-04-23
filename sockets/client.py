@@ -1,4 +1,9 @@
 import socket
+import sys
+import threading
+
+sys.path.insert(0, '../Lights')
+
 from led import Lights
 
 HOST = socket.gethostbyname("rp1")
@@ -13,7 +18,7 @@ def advertiseBLE():
     exec(open("~/bluez-5.43/test/example-advertisement").read())
 
 if __name__ == "__main__":
-    advertise = thread.Thread(target=advertiseBLE)
+    advertise = threading.Thread(target=advertiseBLE)
     advertise.start()
 
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
