@@ -1,5 +1,6 @@
 import socket
 import sys
+import os
 import threading
 
 sys.path.insert(0, '../Lights')
@@ -15,16 +16,20 @@ light = Lights()
 Using the example code from the BlueZ libary to create an BLE advertisement
 '''
 def advertiseBLE():
-    exec(open("~/bluez-5.43/test/example-advertisement").read())
+    os.system("sudo /home/pi/bluez-5.43/test/example-advertisement") 
 
 if __name__ == "__main__":
     advertise = threading.Thread(target=advertiseBLE)
     advertise.start()
 
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.connect((HOST, PORT))
-    #Telling the server what the hostname of this pi is
-    s.send(b'{:}'.format(socket.gethostname()))
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.connect((HOST, PORT))
+        #Telling the server what the hostname of this pi is
+        name = socket.gethostname()
+        s.send(name.encode())
+    except socket.error as socketerror:
+        print("Error:", socketerror)
 
     while True:
         data = s.recv(1024)
