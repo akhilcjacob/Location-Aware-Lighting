@@ -5,6 +5,7 @@ import time
 import json
 import queue
 import SignalQueue
+import threading
 
 import sys
 sys.path.insert(0, '../Lights')
@@ -163,6 +164,12 @@ def distributeBrightness( signalOrder, color, brightness ):
 		client[0].sendall(b'{:}|{:}'.format(color, brightness/divisor))
 
 '''
+Using the example code from the BlueZ libary to create an BLE advertisement
+'''
+def advertiseBLE():
+	exec(open("~/bluez-5.43/test/example-advertisement").read())
+
+'''
 Runs the code to set up and process signal data
 '''
 def main():
@@ -171,6 +178,9 @@ def main():
 	if HOST == -1: sys.exit(1)
 
 	master = startServer( HOST )
+
+	advertise = thread.Thread(target=advertiseBLE)
+	advertise.start()
 
 	# Sit and wait until both clients connect
 	while ( len(clients) < 2 ):
