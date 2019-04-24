@@ -22,14 +22,17 @@ class SignalQueue(object):
         return False
 
     def put(self, val):
-        if self.itemCount < MAX_SIZE:
-            self.queue[self.itemCount] = val
-            self.itemCount += 1
-        else:
-            raise Full
+        self.queue.append(val)
+        self.itemCount += 1
+        if self.itemCount > maxsize:
+            self.popFront()
+            self.itemCount -= 1
 
     def peekAt(self, loc):
-        return self.queue[loc]
+        if self.itemCount > 0 and loc < self.itemCount:
+            return self.queue[loc]
+        else:
+            return None
 
     def peek(self):
         return self.peekAt(0)
@@ -38,7 +41,10 @@ class SignalQueue(object):
         return self.peekAt( self.itemCount-1 )
 
     def averageQueue(self):
-        return sum(self.queue)/self.itemCount
+        if self.itemCount > 0:
+            return sum(self.queue)/self.itemCount
+        else:
+            return 0
 
     def isOutlier(self, val):
         avg = self.averageQueue()

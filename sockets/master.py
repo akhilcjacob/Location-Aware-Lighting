@@ -1,4 +1,4 @@
-# master.py
+#master.py
 import socket
 import os
 import time
@@ -141,23 +141,21 @@ def parseSignals( load ):
 	brightness = load["brightness"]
 
 	newSignal = {}
-	for pi in [1,2,3]:
-		currentPi = "pi{:}".format(pi)
-		newSignal[load[currentPi]] = currentPi 
+	currentPi = "pi{:}"
 
-	successful = False
-	pi = 1
 	#Running through the 3 Pi's hostnames
-	will_update = [False, False, False]
 	for pi in [1,2,3]:
-		will_update[pi] = updateQueue(pi, load[currentPi])
+		cPi = currentPi.format(pi)
+		newSignal[load[cPi]] = cPi 
+
+		will_update = updateQueue(pi, load[cPi])
 
 		#VERIFY THIS IS OK ===============================================================
 		#If we will not update, take the most recent signal level and use that instead
-		if not will_update[pi]:
-			most_recent = signals[currentPi].peekLast()
-			newSignal.pop( load[currentPi] )
-			newSignal[most_recent] = currentPi
+		if not will_update:
+			most_recent = signals[cPi].peekLast()
+			newSignal.pop( load[cPi] )
+			newSignal[most_recent] = cPi
 
 	ranks = getSignalRanking(newSignal)
 	return color, brightness, ranks
@@ -171,7 +169,7 @@ def distributeBrightness( signalOrder, color, brightness ):
 		divisor = 1
 		if (signalOrder[1] == client[1]): divisor = 2
 		if (signalOrder[2] == client[1]): divisor = brightness
-		client[0].sendall(b'{:}|{:}'.format(color, brightness/divisor))
+		client[0].sendall(('{:}|{:}'.format(color, brightness//divisor).encode() ))
 
 '''
 Using the example code from the BlueZ libary to create an BLE advertisement
