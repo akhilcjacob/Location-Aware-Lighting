@@ -32,6 +32,7 @@ if __name__ == "__main__":
             s.connect((HOST, PORT))
             #Telling the server what the hostname of this pi is
             name = socket.gethostname()
+            name = "pi{:}".format(name[-1])
             s.send(name.encode())
             print("\nServer has been sent the hostname {:}.".format(name))
             break
