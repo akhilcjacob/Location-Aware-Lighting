@@ -23,17 +23,21 @@ if __name__ == "__main__":
     advertise = threading.Thread(target=advertiseBLE)
     advertise.start()
 
-    time.sleep(1)
+    time.sleep(.5)
 
-    try:
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.connect((HOST, PORT))
-        #Telling the server what the hostname of this pi is
-        name = socket.gethostname()
-        s.send(name.encode())
-        print("\nServer has been sent the hostname {:}.".format(name))
-    except socket.error as socketerror:
-        print("Error:", socketerror)
+    while True:
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s.connect((HOST, PORT))
+            #Telling the server what the hostname of this pi is
+            name = socket.gethostname()
+            s.send(name.encode())
+            print("\nServer has been sent the hostname {:}.".format(name))
+        except socket.error as socketerror:
+            print("Error:", socketerror)
+            print("Waiting to try again...")
+            time.sleep(3)
+    
 
     while True:
         data = s.recv(1024)
