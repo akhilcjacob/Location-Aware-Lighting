@@ -3,6 +3,8 @@ sudo killall pigpiod
 
 #Set up the environment and run the server
 sudo pigpiod
+
+python3 client.py &
 export LC_ALL=C.UTF-8
 export LANG=C.UTF-8
 export FLASK_APP=master.py

@@ -165,10 +165,15 @@ Sending the brightness values to the client Pis for them to adjust
 their LEDs appropriately
 '''
 def distributeBrightness( signalOrder, color, brightness ):
+	#Changing telling the clients to do change their lights
+	true_brightness = brightness
+
 	for client in clients:
+		brightness = true_brightness
+
 		divisor = 1
 		if (signalOrder[1] == client[1]): divisor = 2
-		if (signalOrder[2] == client[1]): divisor = brightness
+		if (signalOrder[2] == client[1]): brightness = 0
 		client[0].sendall(('{:}|{:}'.format(color, brightness//divisor).encode() ))
 
 '''
@@ -183,16 +188,7 @@ def advertiseBLE():
 When we get a new HTTP request, we can update the lighting
 '''
 def handleEvent( signalData ):	
-	color, brightness, signals = parseSignals( signalData )
-
-	#Changing lighting and telling the clients to do as well
-	divisor = 1
-	if ( signals[1] == "rp1"): divisor = 2
-	if ( signals[2] == "rp1"): divisor = brightness
-
-	light.setColor( color )
-	light.setBrightness( brightness/divisor )
-
+	color, brightness, signals = parseSignals( signalData )	
 	distributeBrightness( signals, color, brightness )
 
 
@@ -223,12 +219,11 @@ def init():
 	time.sleep(1)
 	print("BLE Advertisement running.")
 
-	# Sit and wait until both clients connect
-	while ( len(clients) < 2 ):
+	# Sit and wait until all three clients connect
+	while ( len(clients) < 3 ):
 		bindClients(master)
-		print("Got one")
 
-	print("Got both client Pi's, now handling lighting control...")
+	print("Got all client Pi's, now handling lighting control...")
 init()
 
 if __name__ == "__main__":
