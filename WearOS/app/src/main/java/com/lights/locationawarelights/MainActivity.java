@@ -8,6 +8,8 @@ import android.bluetooth.le.ScanFilter;
 import android.bluetooth.le.ScanResult;
 import android.bluetooth.le.ScanSettings;
 import android.content.Context;
+import android.content.Intent;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.support.v4.view.ViewPager;
 import android.support.wearable.activity.WearableActivity;
@@ -29,37 +31,28 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.UnsupportedEncodingException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+//import james.wearcolorpicker.WearColorPickerActivity;
+
 public class MainActivity extends WearableActivity {
+
     public static int BRIGHTNESS = 50;
+    public static String COLOR = "#FFFFFF";
 
 
     private ArcProgress arc;
     public static HashMap<String, Integer> scan_results = new LinkedHashMap<>();
-    //    static {
-//        scan_results = new LinkedHashMap<>(); // Diamond operator requires Java 1.7+
-//        scan_results.put("B8:27:EB:69:8F:AD", 0);
-//        scan_results.put("B8:27:EB:BF:07:54", 0);
-//        scan_results.put("B8:27:EB:41:3F:64", 0);
-//    }
     public static HashMap<String, Integer> update_result = new HashMap<>();
-    //    static {
-//
-//        update_result.put("B8:27:EB:69:8F:AD", 0);
-//        update_result.put("B8:27:EB:BF:07:54", 0);
-//        update_result.put("B8:27:EB:41:3F:64", 0);
-//    }
     public static HashMap<String, String> human_read = new HashMap<>();
-    //    static{
-//        human_read.put("B8:27:EB:69:8F:AD", "RP1");
-//        human_read.put("B8:27:EB:BF:07:54", "RP2");
-//        human_read.put("B8:27:EB:41:3F:64", "RP3");
-//    }
+
     private TextView t;
     BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 
@@ -83,7 +76,7 @@ public class MainActivity extends WearableActivity {
         ViewPager viewPager = findViewById(R.id.viewpager);
         viewPager.setAdapter(new CustomPagerAdapter(this));
 
-//        Scan Results: for the specific mac ids the object that the rssi values
+        // Scan Results: for the specific mac ids the object that the rssi values
         scan_results.put("B8:27:EB:69:8F:AD", 0);
         scan_results.put("B8:27:EB:BF:07:54", 0);
         scan_results.put("B8:27:EB:41:3F:64", 0);
@@ -100,9 +93,9 @@ public class MainActivity extends WearableActivity {
 
 
         // Testing in the union: some random mac id
-//        scan_results.put("10:A5:6B:41:D9:55", 0);
-//        update_result.put("10:A5:6B:41:D9:55", 0);
-//        human_read.put("10:A5:6B:41:D9:55", "Rando");
+        // scan_results.put("10:A5:6B:41:D9:55", 0);
+        // update_result.put("10:A5:6B:41:D9:55", 0);
+        // human_read.put("10:A5:6B:41:D9:55", "Rando");
 
 
         // Defines the arc that ring that shows brightness
@@ -123,18 +116,12 @@ public class MainActivity extends WearableActivity {
                 // The MAC id of the newest scan device
                 String mac_id = result.getDevice().toString();
 
-//                MainActivity.scan_results.put("B8:27:EB:69:8F:AD",   MainActivity.scan_results.get("B8:27:EB:69:8F:AD"));
-//                MainActivity.scan_results.put("B8:27:EB:BF:07:54",   MainActivity.scan_results.get("B8:27:EB:BF:07:54"));
-//                MainActivity.scan_results.put("B8:27:EB:41:3F:64",   MainActivity.scan_results.get("B8:27:EB:41:3F:64"));
-//                System.out.println(mac_id+ MainActivity.scan_results.toString());
                 // Check if this is a mac ID we want to store information on
                 if (human_read.containsKey(mac_id)) {
                     setupNetwork();
 
                     // Update the results of the rssi
                     MainActivity.scan_results.put(mac_id, result.getRssi());
-//                    System.out.println("Thisis the new hash");
-//                    System.out.println(mac_id+ MainActivity.scan_results.toString());
 
                     // Update the counter of updates for this pi
                     MainActivity.update_result.put(mac_id, MainActivity.update_result.get(mac_id) + 1);
@@ -148,52 +135,50 @@ public class MainActivity extends WearableActivity {
                         Map.Entry pair = (Map.Entry) it.next();
                         output_blue.append(MainActivity.human_read.get(pair.getKey())).append(" : ").append(pair.getValue()).append(",  U: ").append(update_result.get(pair.getKey()))
                                 .append("\n");
-//                        it.remove(); // avoids a ConcurrentModificationException
                     }
                     t = findViewById(R.id.bluetooth_rsi);
 
-//                    System.out.println(mac_id+scan_results.toString());
                     if (t != null) {
                         t.setText(output_blue.toString());
                     }
                 }
             }
         };
+
         // Start the bluetooth scanner
         mLEScanner.startScan(filters, settings, mScanCallback);
 
     }
 //
-//    public Map<String, String> getHeaders() {
-//        Map<String, String> headers = new HashMap<String, String>();
-//        headers.put("Content-Type", "application/json");
-//        return headers;
-//    }
 
     private void setupNetwork() {
         RequestQueue queue = Volley.newRequestQueue(this);
         final JSONObject jsonObject = new JSONObject();
         try {
-            jsonObject.put("rp1", scan_results.get("B8:27:EB:69:8F:AD"));
-            jsonObject.put("rp2", scan_results.get("B8:27:EB:BF:07:54"));
-            jsonObject.put("rp3", scan_results.get("B8:27:EB:41:3F:64"));
-            jsonObject.put("rp1_update", update_result.get("B8:27:EB:69:8F:AD"));
-            jsonObject.put("rp2_update", update_result.get("B8:27:EB:BF:07:54"));
-            jsonObject.put("rp3_update", update_result.get("B8:27:EB:41:3F:64"));
+            jsonObject.put("pi1", scan_results.get("B8:27:EB:69:8F:AD"));
+            jsonObject.put("pi2", scan_results.get("B8:27:EB:BF:07:54"));
+            jsonObject.put("pi3", scan_results.get("B8:27:EB:41:3F:64"));
+            jsonObject.put("pi1_update", update_result.get("B8:27:EB:69:8F:AD"));
+            jsonObject.put("pi2_update", update_result.get("B8:27:EB:BF:07:54"));
+            jsonObject.put("pi3_update", update_result.get("B8:27:EB:41:3F:64"));
             jsonObject.put("brightness", BRIGHTNESS);
-//            jsonObject.put("rp1", scan_results.get("B8:27:EB:69:8F:AD"));
-//            jsonObject.put("rp2", scan_results.get("B8:27:EB:BF:07:54"));
-//            jsonObject.put("rp3", scan_results.get("B8:27:EB:41:3F:64"));
+            jsonObject.put("color", COLOR);
         } catch (JSONException e) {
             System.out.println("json object failed to build");
-            // handle exception
         }
 
-//        System.out.println("This is the json object");
-//        System.out.println(jsonObject.toString());
 
-        String url = "rp1:5000/";
-        JsonObjectRequest putRequest = new JsonObjectRequest(Request.Method.PUT, url, jsonObject,
+        String url = "http://rp1:5000/";
+        InetAddress address = null;
+//        try {
+//
+//            address = InetAddress.getByName(url);
+//            System.out.println(address.toString());
+//        } catch (UnknownHostException e) {
+//            e.printStackTrace();
+//        }
+//        if (address == null)return;
+        JsonObjectRequest putRequest = new JsonObjectRequest(Request.Method.POST, url, jsonObject,
                 new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {
@@ -212,28 +197,19 @@ public class MainActivity extends WearableActivity {
 
             @Override
             public Map<String, String> getHeaders() {
-                Map<String, String> headers = new HashMap<String, String>();
-                headers.put("Content-Type", "application/json");
-                headers.put("Accept", "application/json");
+                Map<String, String> headers = new HashMap<>();
+                headers.put("content-type", "application/json");
+                headers.put("accept", "application/json");
                 return headers;
             }
 
             @Override
             public byte[] getBody() {
-
-                try {
-                    Log.i("json", jsonObject.toString());
-                    return jsonObject.toString().getBytes("UTF-8");
-                } catch (UnsupportedEncodingException e) {
-                    e.printStackTrace();
-                }
-                return null;
+                Log.i("json", jsonObject.toString());
+                return jsonObject.toString().getBytes(StandardCharsets.UTF_8);
             }
         };
-//// Add the request to the RequestQueue.
         queue.add(putRequest);
-
-
     }
 
     @Override /* KeyEvent.Callback */
@@ -281,6 +257,35 @@ public class MainActivity extends WearableActivity {
         if (arc != null)
             arc.setProgress(BRIGHTNESS);
         return true;
+    }
+
+    private String to_hex(int color) {
+        return String.format("#%06X", (0xFFFFFF & color));
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+
+        if (requestCode == 247) {
+            if (resultCode == RESULT_OK && data != null && data.hasExtra(WearColorPickerActivity.EXTRA_COLOR)) {
+                COLOR = to_hex(data.getIntExtra(WearColorPickerActivity.EXTRA_COLOR, Color.BLACK));
+                //do something with the color value
+            } else {
+                if (data != null) {
+                    System.out.println(to_hex(data.getIntExtra(WearColorPickerActivity.EXTRA_COLOR, Color.BLACK)));
+                    //the color has not been changed - the color picker activity has been closed without pressing the 'done' button
+                }
+            }
+        }
+        setupNetwork();
+    }
+
+    public void pick_acolor(View view) {
+        Intent intent = new Intent(this, WearColorPickerActivity.class);
+        intent.putExtra(WearColorPickerActivity.EXTRA_COLOR, COLOR);
+        startActivityForResult(intent, 247);
     }
 
     public void brightness_up(View view) {
