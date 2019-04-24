@@ -5,7 +5,11 @@ import time
 import json
 import queue
 import SignalQueue
+import requests
 import threading
+from flask import Flask
+from flask import request
+from flask import jsonify
 
 import sys
 sys.path.insert(0, '../Lights')
@@ -18,6 +22,8 @@ QUEUE_SIZE = 10
 MAX_SIG_VARIANCE = .50	#Max a signal strength can vary from the average
 
 clients = []
+
+signalServer = Flask(__name__)
 
 #Holds the historical signal data for each pi
 signals = {
@@ -33,7 +39,7 @@ light = Lights()
 Gets the IP from the command line by parsing out ifconfig data.
 '''
 def getIP():
-	ip = os.popen('ifconfig lo0 | grep "inet\ "').read().strip().split(" ") 
+	ip = os.popen('ifconfig wlan0 | grep "inet\ "').read().strip().split(" ") 
 	if len(ip) > 1:
 		return ip[1]
 	return -1
@@ -57,7 +63,7 @@ Args:
 	server: A socket server that is bound to a port and host
 '''
 def bindClients( server ):
-	print("Server listening for a client.")
+	print("\nServer listening for a client.")
 	server.listen()
 
 	dots = 0
@@ -76,7 +82,8 @@ def bindClients( server ):
 			raise
 		else:
 			print("Connected to {:}".format(addr))
-			name = server.recv(1024)
+			server.settimeout(60)
+			name = conn.recv(1024)
 			clients.append( (conn, name) )
 			return
 
@@ -129,8 +136,7 @@ Args:
 	data: A JSON string containing the color and brightness information
 		for each of the lights
 '''
-def parseSignals( data ):
-	load = json.loads( data )
+def parseSignals( load ):
 	color = load["color"]
 	brightness = load["brightness"]
 
@@ -156,6 +162,10 @@ def parseSignals( data ):
 	ranks = getSignalRanking(newSignal)
 	return color, brightness, ranks
 
+'''
+Sending the brightness values to the client Pis for them to adjust
+their LEDs appropriately
+'''
 def distributeBrightness( signalOrder, color, brightness ):
 	for client in clients:
 		divisor = 1
@@ -167,20 +177,53 @@ def distributeBrightness( signalOrder, color, brightness ):
 Using the example code from the BlueZ libary to create an BLE advertisement
 '''
 def advertiseBLE():
-	exec(open("~/bluez-5.43/test/example-advertisement").read())
+	print("\nSTARTING BLE ADVERTISEMENT")
+	os.system("sudo /home/pi/bluez-5.43/test/example-advertisement")
+	print("\n")
+
+'''
+When we get a new HTTP request, we can update the lighting
+'''
+def handleEvent( signalData ):	
+	color, brightness, signals = parseSignals( signalData )
+
+	#Changing lighting and telling the clients to do as well
+	divisor = 1
+	if ( signals[1] == "rp1"): divisor = 2
+	if ( signals[2] == "rp1"): divisor = brightness
+
+	light.setColor( color )
+	light.setBrightness( brightness/divisor )
+
+	distributeBrightness( signals, color, brightness )
+
+
+@signalServer.route("/", methods=['GET', 'POST'])
+def home():
+	print("Data received.")
+
+	signalData = request.get_json()
+	print(signalData)
+	
+	handleEvent( signalData )
+	return jsonify(success=True)
+
 
 '''
 Runs the code to set up and process signal data
 '''
-def main():
+def init():
 	HOST = getIP()
 
 	if HOST == -1: sys.exit(1)
 
 	master = startServer( HOST )
 
-	advertise = thread.Thread(target=advertiseBLE)
+	advertise = threading.Thread(target=advertiseBLE)
 	advertise.start()
+	
+	time.sleep(1)
+	print("BLE Advertisement running.")
 
 	# Sit and wait until both clients connect
 	while ( len(clients) < 2 ):
@@ -188,24 +231,9 @@ def main():
 		print("Got one")
 
 	print("Got both client Pi's, now handling lighting control...")
+init()
 
-	# Infinite Loop
-	while (True):
-		watchData = receiveSignals()
-		color, brightness, signals = parseSignals( watchData )
-
-		#Changing lighting and telling the clients to do as well
-		divisor = 1
-		if ( signals[1] == "rp1"): divisor = 2
-		if ( signals[2] == "rp1"): divisor = brightness
-
-		light.setColor( color )
-		light.setBrightness( brightness/divisor )
-
-		distributeBrightness( signals, color, brightness )
-
-		#Run again in 1/5th of a second
-		time.sleep(.2)
-
-# RUNNING MAIN
-main()
+if __name__ == "__main__":
+	print("Starting up flask server for signal data...")
+	signalServer.run()
+	
