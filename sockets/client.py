@@ -24,6 +24,7 @@ if __name__ == "__main__":
     advertise.start()
 
     time.sleep(.5)
+    printf("")
 
     while True:
         try:
@@ -35,7 +36,7 @@ if __name__ == "__main__":
             print("\nServer has been sent the hostname {:}.".format(name))
         except socket.error as socketerror:
             print("Error:", socketerror)
-            print("Waiting to try again...")
+            print("Waiting to try again..\n.")
             time.sleep(3)
     
 
