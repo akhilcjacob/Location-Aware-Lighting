@@ -34,20 +34,21 @@ if __name__ == "__main__":
             name = socket.gethostname()
             s.send(name.encode())
             print("\nServer has been sent the hostname {:}.".format(name))
+            break
         except socket.error as socketerror:
             print("Error:", socketerror)
-            print("Waiting to try again..\n.")
+            print("Waiting to try again...\n")
             time.sleep(3)
     
 
     while True:
-        data = s.recv(1024)
+        data = s.recv(1024).decode("UTF-8")
         if not data:
             break
 
         data = data.split("|")
         color = data[0]
-        brightness = data[1]
+        brightness = int(data[1])
 
         light.setColor( color )
         light.setBrightness( brightness )
