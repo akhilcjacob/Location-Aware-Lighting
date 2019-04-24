@@ -47,6 +47,7 @@ if __name__ == "__main__":
         if not data:
             break
 
+        print("Received data: \"{:}\"".format(data))
         data = data.split("|")
         color = data[0]
         brightness = int(data[1])
