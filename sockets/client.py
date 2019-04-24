@@ -24,7 +24,7 @@ if __name__ == "__main__":
     advertise.start()
 
     time.sleep(.5)
-    printf("")
+    print("")
 
     while True:
         try:
