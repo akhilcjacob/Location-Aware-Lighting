@@ -19,9 +19,15 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.TextView;
 
+import com.android.volley.AuthFailureError;
+import com.android.volley.NetworkError;
+import com.android.volley.NoConnectionError;
+import com.android.volley.ParseError;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
+import com.android.volley.ServerError;
+import com.android.volley.TimeoutError;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
@@ -182,15 +188,36 @@ public class MainActivity extends WearableActivity {
                 new Response.Listener<JSONObject>() {
                     @Override
                     public void onResponse(JSONObject response) {
+                        TextView netBox = findViewById(R.id.netStat);
+                        if(netBox != null)
+                            netBox.setText("Connected!");
                         // response
                         Log.d("Response", response.toString());
                     }
+
                 },
                 new Response.ErrorListener() {
                     @Override
-                    public void onErrorResponse(VolleyError error) {
-                        // error
-                        Log.d("Error.Response", error.toString());
+                    public void onErrorResponse(VolleyError volleyError) {
+                        String message = null;
+                        TextView netBox = findViewById(R.id.netStat);
+                        System.out.println(volleyError.toString());
+                            if(netBox == null)return;
+                            if (volleyError instanceof NetworkError) {
+                                message = "Can't connect to Internet...";
+                            } else if (volleyError instanceof ServerError) {
+                                message = "The server could not be found. ";
+                            } else if (volleyError instanceof AuthFailureError) {
+                                message = "Can't connect to Internet...";
+                            } else if (volleyError instanceof ParseError) {
+                                message = "Parsing error!";
+                            } else if (volleyError instanceof NoConnectionError) {
+                                message = "Can't connect to Internet...";
+                            } else if (volleyError instanceof TimeoutError) {
+                                message = "Connection Timeout!";
+                            }
+                            netBox.setText(message);
+
                     }
                 }
         ) {
@@ -279,7 +306,10 @@ public class MainActivity extends WearableActivity {
                 }
             }
         }
+        View screen = findViewById(R.id.colorpickingscreen);
+        if (screen != null)screen.setBackgroundColor(Color.parseColor(COLOR));
         setupNetwork();
+
     }
 
     public void pick_acolor(View view) {
