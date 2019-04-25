@@ -59,7 +59,8 @@ public class MainActivity extends WearableActivity {
 
     private ArcProgress arc;
     public static HashMap<String, Integer> scan_results = new LinkedHashMap<>();
-    public static HashMap<String, Integer> update_result = new HashMap<>();
+    public static HashMap<String, Double> avg_results = new LinkedHashMap<>();
+    public static HashMap<String, Integer> update_result = new LinkedHashMap<>();
     public static HashMap<String, String> human_read = new HashMap<>();
 
     private TextView t;
@@ -84,6 +85,10 @@ public class MainActivity extends WearableActivity {
         scan_results.put("B8:27:EB:69:8F:AD", 0);
         scan_results.put("B8:27:EB:BF:07:54", 0);
         scan_results.put("B8:27:EB:41:3F:64", 0);
+        // Scan Results: for the specific mac ids the object that the rssi values
+        avg_results.put("B8:27:EB:69:8F:AD", 0.0);
+        avg_results.put("B8:27:EB:BF:07:54", 0.0);
+        avg_results.put("B8:27:EB:41:3F:64", 0.0);
 
         //Update Result: Stores the update number of the rssi value
         update_result.put("B8:27:EB:69:8F:AD", 0);
@@ -104,7 +109,7 @@ public class MainActivity extends WearableActivity {
 
         // Defines the arc that ring that shows brightness
         arc = findViewById(R.id.arc);
-        
+
         new Runnable(){
             @Override
             public void run() {
@@ -152,6 +157,21 @@ public class MainActivity extends WearableActivity {
                     // Update the counter of updates for this pi
                     MainActivity.update_result.put(mac_id, MainActivity.update_result.get(mac_id) + 1);
 
+                    System.out.print("The previous avg ");
+                    System.out.print(avg_results.get(mac_id));
+                    System.out.print(" ");
+                    System.out.print(" The updated value "+ result.getRssi());
+//                    double new_avg = avg_results.get(mac_id) * (MainActivity.update_result.get(mac_id)-1.0);
+//                    new_avg +=  result.getRssi();
+//                    new_avg /=(MainActivity.update_result.get(mac_id)*1.0);
+
+//                    double new_avg = (avg_results.get(mac_id) + result.getRssi()) / 2.0;
+                    double new_avg = ((0.7)*avg_results.get(mac_id) + (0.3)*result.getRssi());
+                    System.out.print("The new average ");
+                    System.out.println(new_avg);
+                    MainActivity.avg_results.put(mac_id, new_avg);
+
+
                     // Convert into readable text
                     StringBuilder output_blue = new StringBuilder();
 
@@ -159,7 +179,10 @@ public class MainActivity extends WearableActivity {
                     Iterator it = MainActivity.scan_results.entrySet().iterator();
                     while (it.hasNext()) {
                         Map.Entry pair = (Map.Entry) it.next();
-                        output_blue.append(MainActivity.human_read.get(pair.getKey())).append(" : ").append(pair.getValue()).append(",  U: ").append(update_result.get(pair.getKey()))
+                        output_blue.append(MainActivity.human_read.get(pair.getKey())).append(" : ").append(pair.getValue());
+//                        output_blue.append(",  U: ").append(update_result.get(pair.getKey()))
+                        int ne_av = avg_results.get(pair.getKey()).intValue();
+                        output_blue.append(" A: ").append(ne_av)
                                 .append("\n");
                     }
                     t = findViewById(R.id.bluetooth_rsi);
@@ -183,6 +206,9 @@ public class MainActivity extends WearableActivity {
             jsonObject.put("pi1", scan_results.get("B8:27:EB:69:8F:AD"));
             jsonObject.put("pi2", scan_results.get("B8:27:EB:BF:07:54"));
             jsonObject.put("pi3", scan_results.get("B8:27:EB:41:3F:64"));
+            jsonObject.put("pi1_avg", avg_results.get("B8:27:EB:69:8F:AD"));
+            jsonObject.put("pi2_avg", avg_results.get("B8:27:EB:BF:07:54"));
+            jsonObject.put("pi3_avg", avg_results.get("B8:27:EB:41:3F:64"));
             jsonObject.put("pi1_update", update_result.get("B8:27:EB:69:8F:AD"));
             jsonObject.put("pi2_update", update_result.get("B8:27:EB:BF:07:54"));
             jsonObject.put("pi3_update", update_result.get("B8:27:EB:41:3F:64"));

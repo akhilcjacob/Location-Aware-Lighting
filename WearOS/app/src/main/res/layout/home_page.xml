@@ -46,7 +46,7 @@
             android:layout_marginBottom="8dp"
             app:arc_bottom_text="Brightness"
             app:arc_bottom_text_size="15sp"
-            app:arc_progress="30"
+            app:arc_progress="90"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.493"
