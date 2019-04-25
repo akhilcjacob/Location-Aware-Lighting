@@ -8,7 +8,7 @@ sys.path.insert(0, '../Lights')
 
 from led import Lights
 
-HOST = socket.gethostbyname("rp1")
+HOST = "192.168.1.238" 
 PORT = 5210        # The port used by the server
 
 light = Lights()
@@ -48,9 +48,9 @@ if __name__ == "__main__":
             break
 
         print("Received data: \"{:}\"".format(data))
-        info = data.split("&")[-1]
+        info = data.split("&")
         print("Using data", info)
-        info = info.split("|")
+        info = info.split("|")[-2]
         color = info[0]
         brightness = int(info[1])
 
