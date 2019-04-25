@@ -48,9 +48,9 @@ if __name__ == "__main__":
             break
 
         print("Received data: \"{:}\"".format(data))
-        info = data.split("&")
+        info = data.split("&")[-2]
         print("Using data", info)
-        info = info.split("|")[-2]
+        info = info.split("|")
         color = info[0]
         brightness = int(info[1])
 
