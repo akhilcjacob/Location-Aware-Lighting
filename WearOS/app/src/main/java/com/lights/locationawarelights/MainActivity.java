@@ -46,6 +46,9 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import static android.bluetooth.le.ScanSettings.SCAN_MODE_BALANCED;
+import static android.bluetooth.le.ScanSettings.SCAN_MODE_LOW_LATENCY;
+
 //import james.wearcolorpicker.WearColorPickerActivity;
 
 public class MainActivity extends WearableActivity {
@@ -69,11 +72,6 @@ public class MainActivity extends WearableActivity {
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         // Launch the bluetooth service
-        BluetoothManager bluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
-        bluetoothAdapter = bluetoothManager.getAdapter();
-        BluetoothLeScanner mLEScanner = bluetoothAdapter.getBluetoothLeScanner();
-        ScanSettings settings = new ScanSettings.Builder().build();
-        ArrayList<ScanFilter> filters = new ArrayList<ScanFilter>();
 
         // Probably should be using this
         //ScanFilter.Builder builder = new ScanFilter.Builder();
@@ -106,22 +104,44 @@ public class MainActivity extends WearableActivity {
 
         // Defines the arc that ring that shows brightness
         arc = findViewById(R.id.arc);
+        
+        new Runnable(){
+            @Override
+            public void run() {
+                run_blue();
+            }
+        }.run();
 
-        System.out.println("Running the setup");
-        for (int x = 0; x < 1; x++)
-            setupNetwork();
-        System.out.println("Done the setup");
+    }
 
-        System.out.println("First time: " + MainActivity.scan_results);
+
+    private void run_blue(){
+        BluetoothManager bluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
+        bluetoothAdapter = bluetoothManager.getAdapter();
+        BluetoothLeScanner mLEScanner = bluetoothAdapter.getBluetoothLeScanner();
+        ScanSettings settings = new ScanSettings.Builder().setScanMode(SCAN_MODE_LOW_LATENCY).build();
+        ArrayList<ScanFilter> filters = new ArrayList<ScanFilter>();
+        String[] filterlist = {
+                "B8:27:EB:69:8F:AD",
+                "B8:27:EB:BF:07:54",
+                "B8:27:EB:41:3F:64",
+        };
+        for (int i=0; i< filterlist.length ; i++) {
+            filters.add(new ScanFilter.Builder().setDeviceAddress(filterlist[i]).build());
+            Log.v("Filter: "," "+ filters.get(i).getDeviceAddress());
+        }
+
+
         // The callback that runs for each discovered mac address
         ScanCallback mScanCallback = new ScanCallback() {
             @Override
             public void onScanResult(int callbackType, ScanResult result) {
                 super.onScanResult(callbackType, result);
 
+
                 // The MAC id of the newest scan device
                 String mac_id = result.getDevice().toString();
-
+                System.out.println(mac_id);
                 // Check if this is a mac ID we want to store information on
                 if (human_read.containsKey(mac_id)) {
                     setupNetwork();
@@ -155,7 +175,6 @@ public class MainActivity extends WearableActivity {
         mLEScanner.startScan(filters, settings, mScanCallback);
 
     }
-//
 
     private void setupNetwork() {
         RequestQueue queue = Volley.newRequestQueue(this);
@@ -176,14 +195,7 @@ public class MainActivity extends WearableActivity {
 
         String url = "http://rp1:5000/";
         InetAddress address = null;
-//        try {
-//
-//            address = InetAddress.getByName(url);
-//            System.out.println(address.toString());
-//        } catch (UnknownHostException e) {
-//            e.printStackTrace();
-//        }
-//        if (address == null)return;
+
         JsonObjectRequest putRequest = new JsonObjectRequest(Request.Method.POST, url, jsonObject,
                 new Response.Listener<JSONObject>() {
                     @Override
@@ -301,6 +313,7 @@ public class MainActivity extends WearableActivity {
                 //do something with the color value
             } else {
                 if (data != null) {
+                    COLOR = to_hex(data.getIntExtra(WearColorPickerActivity.EXTRA_COLOR, Color.BLACK));
                     System.out.println(to_hex(data.getIntExtra(WearColorPickerActivity.EXTRA_COLOR, Color.BLACK)));
                     //the color has not been changed - the color picker activity has been closed without pressing the 'done' button
                 }

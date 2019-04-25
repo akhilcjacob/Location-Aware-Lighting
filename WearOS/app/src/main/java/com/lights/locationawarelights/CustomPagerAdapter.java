@@ -6,9 +6,12 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import java.util.ArrayList;
+
 public class CustomPagerAdapter extends PagerAdapter {
 
     private Context mContext;
+
 
     public CustomPagerAdapter(Context context) {
         mContext = context;
