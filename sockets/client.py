@@ -56,9 +56,9 @@ if __name__ == "__main__":
         color = info[0]
         brightness = int(info[1])
 
-		if color != current_color:
-        	light.setColor( color )
-        	current_color = color
+        if color != current_color:
+            light.setColor( color )
+            current_color = color
         light.setBrightness( brightness )
 
     print("Master Pi is down. Stopping...")
