@@ -13,6 +13,8 @@ PORT = 5210        # The port used by the server
 
 light = Lights()
 
+current_color = None
+
 '''
 Using the example code from the BlueZ libary to create an BLE advertisement
 '''
@@ -54,7 +56,9 @@ if __name__ == "__main__":
         color = info[0]
         brightness = int(info[1])
 
-        light.setColor( color )
+		if color != current_color:
+        	light.setColor( color )
+        	current_color = color
         light.setBrightness( brightness )
 
     print("Master Pi is down. Stopping...")
