@@ -18,8 +18,8 @@ import sys
 
 PORT = 5210
 
-QUEUE_SIZE = 10
-MAX_SIG_VARIANCE = 30	#Max a signal strength can vary from the average
+QUEUE_SIZE = 5
+MAX_SIG_VARIANCE = 20	#Max a signal strength can vary from the average
 
 clients = []
 
@@ -27,10 +27,11 @@ signalServer = Flask(__name__)
 
 #Holds the historical signal data for each pi
 signals = {
-	"pi1": SignalQueue.SignalQueue(QUEUE_SIZE, MAX_SIG_VARIANCE),
-	"pi2": SignalQueue.SignalQueue(QUEUE_SIZE, MAX_SIG_VARIANCE),
-	"pi3": SignalQueue.SignalQueue(QUEUE_SIZE, MAX_SIG_VARIANCE)
-} 
+	"pi1": SignalQueue.SignalQueue(maxsize=QUEUE_SIZE, tolerance=MAX_SIG_VARIANCE),
+	"pi2": SignalQueue.SignalQueue(maxsize=QUEUE_SIZE, tolerance=MAX_SIG_VARIANCE),
+	"pi3": SignalQueue.SignalQueue(maxsize=QUEUE_SIZE, tolerance=MAX_SIG_VARIANCE)
+}
+update_count = [0,0,0]
 
 #The light that the master pi controls
 #light = Lights()
@@ -98,7 +99,7 @@ def updatedQueue( pi, strength ):
 	currentPi = "pi{:}".format(pi)
 
 	# If the value is outside the margin of error in terms of the previous signals gathered
-	if len(signals[currentPi]) > 0:
+	if len(signals[currentPi]) > QUEUE_SIZE//2:	#If there is anything to compare it to
 		if signals[currentPi].isOutlier(strength):
 			# We will skip adding that value to the queue
 			return False
@@ -111,12 +112,14 @@ Returns a list of the Pi hostnames in terms of the highest signal strength
 Args:
 	signals: A dict with signal strengths as the keys and pi hostnames as the val
 '''
-def getSignalRanking( signals ):
-	ranks = ["pi1", "pi2", "pi3"]
+def getSignalRanking( averages ):
+	ranks = [None, None, None]
 
-	print("signals.keys() =", signals)
-	ranks[0] = signals[ max(signals.keys()) ]
-	ranks[2] = signals[ min(signals.keys()) ]
+	#ranks[0] = max( list( (signals[n].averageQueue(), n) for n in signals.keys() ))[1]
+	#ranks[2] = min( list( (signals[n].averageQueue(), n) for n in signals.keys() ))[1]
+
+	ranks[0] = "pi{:}".format( averages.index( max( averages ))+1 )
+	ranks[2] = "pi{:}".format( averages.index( min( averages ))+1 )
 
 	#Adding the final one in the middle spot
 	if "pi1" not in ranks:
@@ -138,31 +141,35 @@ def parseSignals( load ):
 	color = load["color"]
 	brightness = load["brightness"]
 
+	updates = [load["pi1_update"], load["pi2_update"], load["pi3_update"]]
+	averages = [load["pi1_avg"], load["pi2_avg"], load["pi3_avg"]]
+
 	newSignal = {}
 	currentPi = "pi{:}"
 
 	#Running through the 3 Pi's hostnames
 	for pi in [1,2,3]:
 		cPi = currentPi.format(pi)
-		strength = load[cPi]
-		print("pi{:} got rssi {:}".format(cPi, strength))
+		#if updates[pi-1] != update_count[pi-1]:
+		#	update_count[pi-1] = updates[pi-1]
 
+		strength = averages[pi-1]
 		newSignal[strength] = cPi 
 
-		updated = updatedQueue(pi, strength)
+			#updated = updatedQueue(pi, strength)
 
-		print("updated =", updated)
+			#print("updated pi{:} =".format(pi), updated)
 
-		#VERIFY THIS IS OK ===============================================================
-		#If we will not update, take the most recent signal level and use that instead
-		#if not updated:
-		#	most_recent = signals[cPi].peekLast()
-		#	newSignal.pop( strength )
-		#	newSignal[most_recent] = cPi
+			#VERIFY THIS IS OK ===============================================================
+			#If we will not update, take the most recent signal level and use that instead
+			#if not updated:
+			#	most_recent = signals[cPi].peekLast()
+			#	newSignal.pop( strength )
+			#	newSignal[most_recent] = cPi
+		#else:
+			#newSignal[pi-1] =
 
-	print("newSignal =", newSignal)
-	print("load =", load)
-	ranks = getSignalRanking(newSignal)
+	ranks = getSignalRanking( averages )
 	return color, brightness, ranks
 
 '''
@@ -171,13 +178,10 @@ their LEDs appropriately
 '''
 def distributeBrightness( signalOrder, color, brightness ):
 	#Changing telling the clients to do change their lights
-	true_brightness = brightness
 
 	print("signalOrder = ", signalOrder)
 
 	for client in clients:
-		brightness = true_brightness
-
 		if (signalOrder[0] == client[1]):
 			print("Sending {:} data: color = {:}, brightness = {:}".format(client[1], color, brightness))
 			client[0].sendall(('{:}|{:03d}&'.format(color, brightness).encode() ))
@@ -189,6 +193,8 @@ def distributeBrightness( signalOrder, color, brightness ):
 		elif (signalOrder[2] == client[1]): 
 			print("Sending {:} data: color = {:}, brightness = {:}".format(client[1], color, 0))
 			client[0].sendall(('{:}|{:03d}&'.format(color, 0).encode() ))
+
+	print()
 
 '''
 Using the example code from the BlueZ libary to create an BLE advertisement
