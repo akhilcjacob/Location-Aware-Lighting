@@ -14,7 +14,7 @@ class SignalQueue(object):
         self.tolerance = tolerance
 
     def __len__(self):
-        return itemCount
+        return self.itemCount
 
     def queueFull(self):
         if self.itemCount >= self.maxsize:
@@ -24,7 +24,7 @@ class SignalQueue(object):
     def put(self, val):
         self.queue.append(val)
         self.itemCount += 1
-        if self.itemCount > maxsize:
+        if self.itemCount > self.maxsize:
             self.popFront()
             self.itemCount -= 1
 

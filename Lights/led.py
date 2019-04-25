@@ -79,19 +79,17 @@ class Lights(object):
             pi.set_PWM_dutycycle(self.redPin, redVal)
             pi.set_PWM_dutycycle(self.greenPin, grnVal)
             pi.set_PWM_dutycycle(self.bluePin, bluVal)
-            time.sleep(0.3)
+            time.sleep(0.2)
 
     def setColor(self, hexColor):
         rgb = self.hexTOrgb(hexColor)
         self.colorFade(self.hexTOrgb(self.color), rgb)
         self.color = hexColor
 
-# l = Lights()
-# while True:
-#     l.setColor('#ff0000')
-#     l.setBrightness(20)
-#     l.setColor('#0000ff')
-#     l.setBrightness(0)
-#     l.setColor('#00ff00')
-#     l.setBrightness(50)
-# time.sleep(3)
+if __name__ == "__main__":
+ l = Lights()
+ while True:
+     l.setColor('#ff0000')
+     l.setBrightness(60)
+     l.setBrightness(50)
+ time.sleep(3)
