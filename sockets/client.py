@@ -43,13 +43,16 @@ if __name__ == "__main__":
     
 
     while True:
-        data = s.recv(1024).decode("UTF-8")
+        data = s.recv(61).decode("UTF-8")
         if not data:
             break
 
-        data = data.split("|")
-        color = data[0]
-        brightness = int(data[1])
+        print("Received data: \"{:}\"".format(data))
+        info = data.split("&")[-1]
+        print("Using data", info)
+        info = info.split("|")
+        color = info[0]
+        brightness = int(info[1])
 
         light.setColor( color )
         light.setBrightness( brightness )
