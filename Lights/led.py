@@ -79,7 +79,7 @@ class Lights(object):
             pi.set_PWM_dutycycle(self.redPin, redVal)
             pi.set_PWM_dutycycle(self.greenPin, grnVal)
             pi.set_PWM_dutycycle(self.bluePin, bluVal)
-            time.sleep(0.008)
+            #time.sleep(0.008)
 
     def setColor(self, hexColor):
         rgb = self.hexTOrgb(hexColor)

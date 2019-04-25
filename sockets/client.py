@@ -8,7 +8,7 @@ sys.path.insert(0, '../Lights')
 
 from led import Lights
 
-HOST = "192.168.1.238" 
+HOST = "192.168.1.47" 
 PORT = 5210        # The port used by the server
 
 light = Lights()
