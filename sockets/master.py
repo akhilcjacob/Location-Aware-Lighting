@@ -12,14 +12,14 @@ from flask import request
 from flask import jsonify
 
 import sys
-sys.path.insert(0, '../Lights')
+#sys.path.insert(0, '../Lights')
 
-from led import Lights
+#from led import Lights
 
 PORT = 5210
 
-QUEUE_SIZE = 10
-MAX_SIG_VARIANCE = .50	#Max a signal strength can vary from the average
+QUEUE_SIZE = 5
+MAX_SIG_VARIANCE = 20	#Max a signal strength can vary from the average
 
 clients = []
 
@@ -27,13 +27,14 @@ signalServer = Flask(__name__)
 
 #Holds the historical signal data for each pi
 signals = {
-	"pi1": SignalQueue.SignalQueue(QUEUE_SIZE, MAX_SIG_VARIANCE),
-	"pi2": SignalQueue.SignalQueue(QUEUE_SIZE, MAX_SIG_VARIANCE),
-	"pi3": SignalQueue.SignalQueue(QUEUE_SIZE, MAX_SIG_VARIANCE)
-} 
+	"pi1": SignalQueue.SignalQueue(maxsize=QUEUE_SIZE, tolerance=MAX_SIG_VARIANCE),
+	"pi2": SignalQueue.SignalQueue(maxsize=QUEUE_SIZE, tolerance=MAX_SIG_VARIANCE),
+	"pi3": SignalQueue.SignalQueue(maxsize=QUEUE_SIZE, tolerance=MAX_SIG_VARIANCE)
+}
+update_count = [0,0,0]
 
 #The light that the master pi controls
-light = Lights()
+#light = Lights()
 
 '''
 Gets the IP from the command line by parsing out ifconfig data.
@@ -83,8 +84,8 @@ def bindClients( server ):
 		else:
 			print("Connected to {:}".format(addr))
 			server.settimeout(60)
-			name = conn.recv(1024)
-			clients.append( (conn, name) )
+			name = conn.recv(1024).decode("UTF-8")
+			clients.append( (conn, name))
 			return
 
 '''
@@ -94,18 +95,14 @@ Args:
 	strength: A float that is the signal strength to be added to the queues
 Returns: True if the value was added, False if skipping this value
 '''
-def updateQueue( pi, strength ):
+def updatedQueue( pi, strength ):
 	currentPi = "pi{:}".format(pi)
 
 	# If the value is outside the margin of error in terms of the previous signals gathered
-	if signals[currentPi].isOutlier(strength):
-		# We will skip adding that value to the queue
-		return False
-
-	#Otherwise, we will add the value to the queue
-	#Make room for the new value if there isn't any
-	if signals[currentPi].queueFull(): 
-		signals[currentPi].popFront()
+	if len(signals[currentPi]) > QUEUE_SIZE//2:	#If there is anything to compare it to
+		if signals[currentPi].isOutlier(strength):
+			# We will skip adding that value to the queue
+			return False
 
 	signals[currentPi].put(strength)
 	return True
@@ -115,18 +112,22 @@ Returns a list of the Pi hostnames in terms of the highest signal strength
 Args:
 	signals: A dict with signal strengths as the keys and pi hostnames as the val
 '''
-def getSignalRanking( signals ):
+def getSignalRanking( averages ):
 	ranks = [None, None, None]
-	ranks[0] = signals[ max(signals.keys()) ]
-	ranks[2] = signals[ min(signals.keys()) ]
+
+	#ranks[0] = max( list( (signals[n].averageQueue(), n) for n in signals.keys() ))[1]
+	#ranks[2] = min( list( (signals[n].averageQueue(), n) for n in signals.keys() ))[1]
+
+	ranks[0] = "pi{:}".format( averages.index( max( averages ))+1 )
+	ranks[2] = "pi{:}".format( averages.index( min( averages ))+1 )
 
 	#Adding the final one in the middle spot
-	if "rp1" not in ranks:
-		ranks[1] = "rp1"
-	elif "rp2" not in ranks:
-		ranks[1] = "rp2"
-	else:
-		ranks[1] = "rp3"
+	if "pi1" not in ranks:
+		ranks[1] = "pi1"
+	elif "pi2" not in ranks:
+		ranks[1] = "pi2"
+	elif "pi3" not in ranks:
+		ranks[1] = "pi3"
 
 	return ranks
 
@@ -140,24 +141,35 @@ def parseSignals( load ):
 	color = load["color"]
 	brightness = load["brightness"]
 
+	updates = [load["pi1_update"], load["pi2_update"], load["pi3_update"]]
+	averages = [load["pi1_avg"], load["pi2_avg"], load["pi3_avg"]]
+
 	newSignal = {}
 	currentPi = "pi{:}"
 
 	#Running through the 3 Pi's hostnames
 	for pi in [1,2,3]:
 		cPi = currentPi.format(pi)
-		newSignal[load[cPi]] = cPi 
+		#if updates[pi-1] != update_count[pi-1]:
+		#	update_count[pi-1] = updates[pi-1]
 
-		will_update = updateQueue(pi, load[cPi])
+		strength = averages[pi-1]
+		newSignal[strength] = cPi 
 
-		#VERIFY THIS IS OK ===============================================================
-		#If we will not update, take the most recent signal level and use that instead
-		if not will_update:
-			most_recent = signals[cPi].peekLast()
-			newSignal.pop( load[cPi] )
-			newSignal[most_recent] = cPi
+			#updated = updatedQueue(pi, strength)
 
-	ranks = getSignalRanking(newSignal)
+			#print("updated pi{:} =".format(pi), updated)
+
+			#VERIFY THIS IS OK ===============================================================
+			#If we will not update, take the most recent signal level and use that instead
+			#if not updated:
+			#	most_recent = signals[cPi].peekLast()
+			#	newSignal.pop( strength )
+			#	newSignal[most_recent] = cPi
+		#else:
+			#newSignal[pi-1] =
+
+	ranks = getSignalRanking( averages )
 	return color, brightness, ranks
 
 '''
@@ -165,11 +177,24 @@ Sending the brightness values to the client Pis for them to adjust
 their LEDs appropriately
 '''
 def distributeBrightness( signalOrder, color, brightness ):
+	#Changing telling the clients to do change their lights
+
+	print("signalOrder = ", signalOrder)
+
 	for client in clients:
-		divisor = 1
-		if (signalOrder[1] == client[1]): divisor = 2
-		if (signalOrder[2] == client[1]): divisor = brightness
-		client[0].sendall(('{:}|{:}'.format(color, brightness//divisor).encode() ))
+		if (signalOrder[0] == client[1]):
+			print("Sending {:} data: color = {:}, brightness = {:}".format(client[1], color, brightness))
+			client[0].sendall(('{:}|{:03d}&'.format(color, brightness).encode() ))
+			continue
+		elif (signalOrder[1] == client[1]): 
+			print("Sending {:} data: color = {:}, brightness = {:}".format(client[1], color, brightness//10))
+			client[0].sendall(('{:}|{:03d}&'.format(color, brightness//10).encode() ))
+			continue
+		elif (signalOrder[2] == client[1]): 
+			print("Sending {:} data: color = {:}, brightness = {:}".format(client[1], color, 0))
+			client[0].sendall(('{:}|{:03d}&'.format(color, 0).encode() ))
+
+	print()
 
 '''
 Using the example code from the BlueZ libary to create an BLE advertisement
@@ -183,16 +208,7 @@ def advertiseBLE():
 When we get a new HTTP request, we can update the lighting
 '''
 def handleEvent( signalData ):	
-	color, brightness, signals = parseSignals( signalData )
-
-	#Changing lighting and telling the clients to do as well
-	divisor = 1
-	if ( signals[1] == "rp1"): divisor = 2
-	if ( signals[2] == "rp1"): divisor = brightness
-
-	light.setColor( color )
-	light.setBrightness( brightness/divisor )
-
+	color, brightness, signals = parseSignals( signalData )	
 	distributeBrightness( signals, color, brightness )
 
 
@@ -223,12 +239,11 @@ def init():
 	time.sleep(1)
 	print("BLE Advertisement running.")
 
-	# Sit and wait until both clients connect
-	while ( len(clients) < 2 ):
+	# Sit and wait until all three clients connect
+	while ( len(clients) < 3 ):
 		bindClients(master)
-		print("Got one")
 
-	print("Got both client Pi's, now handling lighting control...")
+	print("Got all client Pi's, now handling lighting control...")
 init()
 
 if __name__ == "__main__":

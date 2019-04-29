@@ -8,12 +8,10 @@ sys.path.insert(0, '../Lights')
 
 from led import Lights
 
-HOST = "192.168.1.47" 
+HOST = "192.168.1.238"
 PORT = 5210        # The port used by the server
 
 light = Lights()
-
-current_color = None
 
 '''
 Using the example code from the BlueZ libary to create an BLE advertisement
@@ -26,7 +24,7 @@ if __name__ == "__main__":
     advertise.start()
 
     time.sleep(.5)
-    print("")
+    print("Attempting to connect to {:}:{:}...".format( HOST,PORT))
 
     while True:
         try:
@@ -34,6 +32,7 @@ if __name__ == "__main__":
             s.connect((HOST, PORT))
             #Telling the server what the hostname of this pi is
             name = socket.gethostname()
+            
             name = "pi{:}".format(name[-1])
             s.send(name.encode())
             print("\nServer has been sent the hostname {:}.".format(name))
@@ -45,20 +44,16 @@ if __name__ == "__main__":
     
 
     while True:
-        data = s.recv(61).decode("UTF-8")
+        data = s.recv(60).decode("UTF-8")
         if not data:
             break
-
+            
         print("Received data: \"{:}\"".format(data))
-        info = data.split("&")[-2]
-        print("Using data", info)
-        info = info.split("|")
-        color = info[0]
-        brightness = int(info[1])
+        data = data.split("|")
+        color = data[0]
+        brightness = int(data[1])
 
-        if color != current_color:
-            light.setColor( color )
-            current_color = color
+        light.setColor( color )
         light.setBrightness( brightness )
 
     print("Master Pi is down. Stopping...")
